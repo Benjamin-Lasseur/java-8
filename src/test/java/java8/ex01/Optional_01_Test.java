@@ -16,86 +16,95 @@ import static org.junit.Assert.*;
  */
 public class Optional_01_Test {
 
-    class NotFountException extends RuntimeException {}
+	@SuppressWarnings("serial")
+	class NotFountException extends RuntimeException {
+	}
 
+	// tag::findMethod[]
+	<T> Optional<T> find(List<T> list, Predicate<T> predicate) {
+		T result = null;
 
-    // tag::findMethod[]
-    <T> T find(List<T> list, Predicate<T> predicate) {
-        T result = null;
+		for (T p : list) {
+			if (predicate.test(p)) {
+				result = p;
+				break;
+			}
+		}
 
-        for (T p : list) {
-            if (predicate.test(p)) {
-                result = p;
-                break;
-            }
-        }
+		return Optional.ofNullable(result);
+	}
 
-        return result;
-    }
-    // end::findMethod[]
+	<T> T find(List<T> list, Predicate<T> predicate, T defaultValue) {
+		Optional<T> result = find(list, predicate);
+		T returnedValue = null;
+		if (result.isPresent()) {
+			returnedValue = result.get();
+		} else {
+			returnedValue = defaultValue;
+		}
+		return returnedValue;
+	}
+	// end::findMethod[]
 
+	@Test
+	public void test_optional_found() throws Exception {
 
-    @Test
-    public void test_optional_found() throws Exception {
+		List<Person> personList = Data.buildPersonList(100);
 
-        List<Person> personList = Data.buildPersonList(100);
+		// TODO invoquer la méthode find(List<T> list, Predicate<T> predicate)
+		// TODO age == 10
+		Optional<Person> result = find(personList, p -> p.getAge() == 10);
 
-        // TODO invoquer la méthode find(List<T> list, Predicate<T> predicate)
-        // TODO age == 10
-        Optional<Person> result = null;
+		assertThat(result, instanceOf(Optional.class));
+		assertThat(result.isPresent(), is(true));
+		assertThat(result.get(), instanceOf(Person.class));
+		assertThat(result.get(), hasProperty("firstname", is("first_10")));
+		assertThat(result.get(), hasProperty("age", is(10)));
+	}
 
-        assertThat(result, instanceOf(Optional.class));
-        assertThat(result.isPresent(), is(true));
-        assertThat(result.get(), instanceOf(Person.class));
-        assertThat(result.get(), hasProperty("firstname", is("first_10")));
-        assertThat(result.get(), hasProperty("age", is(10)));
-    }
+	@Test
+	public void test_optional_notfound() throws Exception {
 
-    @Test
-    public void test_optional_notfound() throws Exception {
+		List<Person> personList = Data.buildPersonList(100);
 
+		// TODO invoquer la méthode find(List<T> list, Predicate<T> predicate)
+		// TODO age == 400
+		Optional<Person> result = find(personList, p -> p.getAge() == 400);
 
-        List<Person> personList = Data.buildPersonList(100);
+		assertThat(result, instanceOf(Optional.class));
+		assertThat(result.isPresent(), is(false));
+	}
 
-        // TODO invoquer la méthode find(List<T> list, Predicate<T> predicate)
-        // TODO age == 400
-        Optional<Person> result = null;
+	@Test(expected = NotFountException.class)
+	public void test_optional_notfound_throw_exception() throws Exception {
+		List<Person> personList = Data.buildPersonList(100);
 
-        assertThat(result, instanceOf(Optional.class));
-        assertThat(result.isPresent(), is(false));
-    }
+		// TODO invoquer la méthode find(List<T> list, Predicate<T> predicate)
+		// TODO age == 10 et firstname == "last_10"
+		Optional<Person> result = find(personList, p -> p.getAge() == 10 && p.getFirstname().equals("last_10"));
 
-    @Test(expected = NotFountException.class)
-    public void test_optional_notfound_throw_exception() throws Exception {
+		// TODO Utiliser la méthode orElseThrow pour déclencher l'exception
+		// NotFountException si non trouvé
+		result.orElseThrow(NotFountException::new);
+	}
 
+	@Test
+	public void test_optional_notfound_with_default_value() throws Exception {
 
-        List<Person> personList = Data.buildPersonList(100);
+		List<Person> personList = Data.buildPersonList(100);
 
-        // TODO invoquer la méthode find(List<T> list, Predicate<T> predicate)
-        // TODO age == 10 et firstname == "last_10"
-        Optional<Person> result = null;
+		Person defaultValue = new Person();
+		defaultValue.setFirstname("DEFAULT");
+		defaultValue.setLastname("DEFAULT");
 
-        // TODO Utiliser la méthode orElseThrow pour déclencher l'exception NotFountException si non trouvé
-    }
+		// TODO invoquer la méthode find(List<T> list, Predicate<T> predicate, T
+		// defaultValue)
+		// TODO predicate => age == 400
+		Person result = find(personList, p -> p.getAge() == 400, defaultValue);
 
-    @Test
-    public void test_optional_notfound_with_default_value() throws Exception {
-
-
-        List<Person> personList = Data.buildPersonList(100);
-
-        Person defaultValue = new Person();
-        defaultValue.setFirstname("DEFAULT");
-        defaultValue.setLastname("DEFAULT");
-
-        // TODO invoquer la méthode find(List<T> list, Predicate<T> predicate, T defaultValue)
-        // TODO predicate => age == 400
-        Person result = null;
-
-        assertThat(result, notNullValue());
-        assertThat(result, hasProperty("firstname", is("DEFAULT")));
-        assertThat(result, hasProperty("lastname", is("DEFAULT")));
-    }
-
+		assertThat(result, notNullValue());
+		assertThat(result, hasProperty("firstname", is("DEFAULT")));
+		assertThat(result, hasProperty("lastname", is("DEFAULT")));
+	}
 
 }
